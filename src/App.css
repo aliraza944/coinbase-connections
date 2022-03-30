@@ -36,3 +36,19 @@
     transform: rotate(360deg);
   }
 }
+h1 {
+  font-size: 3rem;
+  font-weight: bold;
+  color: #61dafb;
+}
+button {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #61dafb;
+  background-color: #282c34;
+  border: none;
+  border-radius: 5px;
+  padding: 10px;
+  margin: 10px;
+  cursor: pointer;
+}
