@@ -1,21 +1,15 @@
 import "./App.css";
 import { useEffect, useState } from "react";
-import { useWeb3React } from "@web3-react/core";
 import { coinbaseWallet, hooks } from "./connector";
+import Web3 from "web3";
 const {
-  useChainId,
   useAccounts,
-  useError,
+
   useIsActivating,
-  useIsActive,
-  useProvider,
-  useENSNames,
 } = hooks;
 
 function App() {
-  const { active, activate, chainId, account } = useWeb3React();
   const isActivating = useIsActivating();
-  const isActive = useIsActive();
   const accounts = useAccounts();
 
   const connectToCoinBase = async () => {
@@ -34,6 +28,22 @@ function App() {
     }
   };
 
+  const connectToMetamask = async () => {
+    if (typeof window.ethereum !== "undefined") {
+      let provider = window.ethereum;
+      // edge case if MM and CBW are both installed
+      if (window.ethereum.providers?.length) {
+        window.ethereum.providers.forEach(async (p) => {
+          if (p.isMetaMask) provider = p;
+        });
+      }
+      await provider.request({
+        method: "eth_requestAccounts",
+        params: [],
+      });
+    }
+  };
+
   useEffect(() => {
     coinbaseWallet.connectEagerly();
   }, []);
@@ -45,6 +55,9 @@ function App() {
       <button onClick={disconnect}>Disconnect</button>
       <button onClick={connectToCoinBase} disabled={isActivating}>
         Connect To Coinbase
+      </button>
+      <button onClick={connectToMetamask} disabled={isActivating}>
+        Connect To Metamask
       </button>
     </div>
   );
