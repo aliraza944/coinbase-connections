@@ -16,12 +16,20 @@ function App() {
   const accounts = useAccounts();
   const isActive = useIsActive();
   const provider = useProvider();
+
   const connectToCoinBase = async () => {
-    try {
-      await coinbaseWallet.activate();
-      console.log(provider);
-    } catch (error) {
-      console.log(error);
+    if (typeof window.ethereum !== "undefined") {
+      let provider = window.ethereum;
+      // edge case if MM and CBW are both installed
+      if (window.ethereum.providers?.length) {
+        window.ethereum.providers.forEach(async (p) => {
+          if (p.isCoinbaseWallet) provider = p;
+        });
+      }
+      await provider.request({
+        method: "eth_requestAccounts",
+        params: [],
+      });
     }
   };
 
@@ -55,29 +63,33 @@ function App() {
 
   const getManger = async () => {
     try {
-      if (isActive) {
-        const web3 = new Web3(window.ethereum);
-
-        if (web3) {
-          const accounts = await web3.eth.getAccounts();
-          console.log(
-            "🚀 ~ file: App.js ~ line 65 ~ getManger ~ accounts",
-            accounts
-          );
-
-          const lottery = new web3.eth.Contract(abi, CONTRACT_ADDRESS);
-
-          console.log(
-            "get the manager",
-            await lottery.methods.manager().call()
-          );
-          const transaction = await lottery.methods.enter().send({
-            from: accounts[0],
-            value: web3.utils.toWei("0.1", "ether"),
+      let provider = window.ethereum;
+      if (typeof window.ethereum !== "undefined") {
+        // edge case if MM and CBW are both installed
+        if (window.ethereum.providers?.length) {
+          window.ethereum.providers.forEach(async (p) => {
+            if (p.isCoinbaseWallet) provider = p;
           });
-          if (transaction) {
-            console.log(transaction);
-          }
+        }
+      }
+      const web3 = new Web3(provider);
+
+      if (web3) {
+        const accounts = await web3.eth.getAccounts();
+        console.log(
+          "🚀 ~ file: App.js ~ line 65 ~ getManger ~ accounts",
+          accounts
+        );
+
+        const lottery = new web3.eth.Contract(abi, CONTRACT_ADDRESS);
+
+        console.log("get the manager", await lottery.methods.manager().call());
+        const transaction = await lottery.methods.enter().send({
+          from: accounts[0],
+          value: web3.utils.toWei("0.1", "ether"),
+        });
+        if (transaction) {
+          console.log(transaction);
         }
       }
     } catch (error) {
@@ -87,7 +99,17 @@ function App() {
 
   const sendTrasaction = async () => {
     try {
-      const web3 = new Web3(window.ethereum);
+      let provider = window.ethereum;
+      if (typeof window.ethereum !== "undefined") {
+        // edge case if MM and CBW are both installed
+        if (window.ethereum.providers?.length) {
+          window.ethereum.providers.forEach(async (p) => {
+            if (p.isMetaMask) provider = p;
+          });
+        }
+      }
+
+      const web3 = new Web3(provider);
 
       if (web3) {
         const accounts = await web3.eth.getAccounts();
@@ -123,7 +145,7 @@ function App() {
         Connect To Coinbase
       </button>
       <button onClick={connectToMetamask}>Connect To Metamask</button>
-      <button onClick={getManger}>Get Manager</button>
+      <button onClick={getManger}>Coinbase transaction</button>
       <button onClick={sendTrasaction}>Metamask Transaction</button>
     </div>
   );
